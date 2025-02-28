@@ -257,11 +257,11 @@ if __name__ == "__main__":
 
     # Data loading
     B, T = 4, 32
-    
+
     torch.manual_seed(1337)
-    if device == 'cuda'
+    if device == "cuda":
         torch.cuda.manual_seed(1337)
-    elif device == 'mps':
+    elif device == "mps":
         torch.mps.manual_seed(1337)
 
     dataloader = DataLoaderLite("./dataset/input.txt", B, T)
