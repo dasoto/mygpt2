@@ -265,13 +265,14 @@ if __name__ == "__main__":
         torch.mps.manual_seed(1337)
 
     dataloader = DataLoaderLite("./dataset/input.txt", B, T)
+    torch.set_float32_matmul_precision("high")
 
     model = GPT(GPTConfig())
     model.to(device)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
     start_training = time.time()
-    for i in range(50):
+    for i in range(10):
         t0 = time.time()
         x, y = dataloader.next_batch()
         x, y = x.to(device), y.to(device)
@@ -285,7 +286,9 @@ if __name__ == "__main__":
             torch.mps.synchronize()
         t1 = time.time()
         dt = (t1 - t0) * 1000  # milliseconds
-        print(f"step {i}, loss: {loss.item()}, step_time={dt:.2f}ms")
+        print(
+            f"step {i}, loss: {loss.item()}, step_time={dt:.2f}ms, toks/sec={B * T / dt}"
+        )
 
     print(f"Training time took: {time.time() - start_training} seconds")
 
