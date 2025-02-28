@@ -5,7 +5,7 @@ from torch.nn import functional as F
 import math
 import time
 import tiktoken
-from src.dataloader import DataLoaderLite
+from dataloader import DataLoaderLite
 
 
 @dataclass
@@ -268,7 +268,7 @@ if __name__ == "__main__":
     torch.set_float32_matmul_precision("high")
 
     model = GPT(GPTConfig())
-    model.to(device)
+    model = model.to(device)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
     start_training = time.time()
