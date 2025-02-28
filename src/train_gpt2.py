@@ -244,6 +244,7 @@ def get_device():
         device = "mps"
 
     print(f"Using device: {device}")
+    return device
 
 
 if __name__ == "__main__":
