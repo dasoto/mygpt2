@@ -256,7 +256,7 @@ if __name__ == "__main__":
     # print(f"It took: {time.time() - start_time}")
 
     # Data loading
-    B, T = 4, 32
+    B, T = 4, 1024
 
     torch.manual_seed(1337)
     if device == "cuda":
@@ -272,13 +272,20 @@ if __name__ == "__main__":
     optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
     start_training = time.time()
     for i in range(50):
+        t0 = time.time()
         x, y = dataloader.next_batch()
         x, y = x.to(device), y.to(device)
         optimizer.zero_grad()
         logits, loss = model(x, y)
         loss.backward()
         optimizer.step()
-        print(f"step {i}, loss: {loss.item()}")
+        if device == "cuda":
+            torch.cuda.synchronize()
+        elif device == "mps":
+            torch.mps.synchronize()
+        t1 = time.time()
+        dt = (t1 - t0) * 1000  # milliseconds
+        print(f"step {i}, loss: {loss.item()}, step_time={dt:.2f}ms")
 
     print(f"Training time took: {time.time() - start_training} seconds")
 
