@@ -270,7 +270,8 @@ if __name__ == "__main__":
     model.to(device)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
-    for i in range(500):
+    start_training = time.time()
+    for i in range(50):
         x, y = dataloader.next_batch()
         x, y = x.to(device), y.to(device)
         optimizer.zero_grad()
@@ -279,7 +280,8 @@ if __name__ == "__main__":
         optimizer.step()
         print(f"step {i}, loss: {loss.item()}")
 
-    print(logits.shape)
-    print(loss)
+    print(f"Training time took: {time.time() - start_training} seconds")
 
+    print("Starting Inference")
     run_inference(model, device, "Hello, how are you today?", 30, 5)
+    print("End Inference")
