@@ -5,7 +5,7 @@ from torch.nn import functional as F
 import math
 import time
 import tiktoken
-from dataloader import DataLoaderLite
+from src.dataloader import DataLoaderLite
 
 
 @dataclass
@@ -287,7 +287,7 @@ if __name__ == "__main__":
         t1 = time.time()
         dt = (t1 - t0) * 1000  # milliseconds
         print(
-            f"step {i}, loss: {loss.item()}, step_time={dt:.2f}ms, toks/sec={B * T / dt}"
+            f"step {i}, loss: {loss.item()}, step_time={dt:.2f}ms, toks/sec={B * T / dt}, device: {device}"
         )
 
     print(f"Training time took: {time.time() - start_training} seconds")
