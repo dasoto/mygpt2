@@ -87,7 +87,7 @@ def main(argv):
         x, y = dataloader.next_batch()
         x, y = x.to(device), y.to(device)
         optimizer.zero_grad()
-        with torch.autocast(device_type=device, dtype=torch.bfloat16):
+        with torch.autocast(device_type=device, dtype=torch.float16):
             logits, loss = model(x, y)
         loss.backward()
         optimizer.step()
