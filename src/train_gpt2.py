@@ -38,6 +38,11 @@ flags.DEFINE_bool(
     False,
     "Run Inference at the end",
 )
+flags.DEFINE_bool(
+    "autocast",
+    False,
+    "Enable autocast for training",
+)
 
 
 def get_device():
@@ -87,7 +92,10 @@ def main(argv):
         x, y = dataloader.next_batch()
         x, y = x.to(device), y.to(device)
         optimizer.zero_grad()
-        with torch.autocast(device_type=device, dtype=torch.float16):
+        if FLAGS.autocast:
+            with torch.autocast(device_type=device, dtype=torch.float16):
+                logits, loss = model(x, y)
+        else:
             logits, loss = model(x, y)
         loss.backward()
         optimizer.step()
@@ -98,7 +106,7 @@ def main(argv):
         t1 = time.time()
         dt = (t1 - t0) * 1000  # milliseconds
         print(
-            f"step {i}, loss: {loss.item()}, step_time={dt:.2f}ms, toks/sec={B * T / dt}, device: {device}"
+            f"step {i}, loss: {loss.item()}, step_time={dt:.2f}ms, toks/sec={(B * T / dt) * 1000:.2f}, device: {device}"
         )
 
     print(f"Training time took: {time.time() - start_training} seconds")
