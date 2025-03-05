@@ -154,7 +154,7 @@ class GPT(nn.Module):
         return logits, loss
 
     def configure_optimizers(
-        self, weight_decay: float, learning_rate: float, device: str
+        self, weight_decay: float, learning_rate: float, device: str, fused: bool
     ) -> torch.optim:
         # Start with al lthe parameters that require grad
         param_dict = {pn: p for pn, p in self.named_parameters()}
@@ -174,8 +174,7 @@ class GPT(nn.Module):
             f"Num non-decayed parameter tensors: {len(nodecay_params)}, with {num_nodecay_params:,} parameters"
         )
         fused_available = "fused" in inspect.signature(torch.optim.AdamW).parameters
-        use_fused = fused_available and "cuda" in device
-        use_fused = False
+        use_fused = fused_available and "cuda" in device and fused
         print(f"Using fused AdamW: {use_fused}")
         optimizer = torch.optim.AdamW(
             optim_groups, lr=learning_rate, betas=(0.9, 0.95), eps=1e-8, fused=use_fused
