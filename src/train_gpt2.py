@@ -124,12 +124,12 @@ def main(argv):
             coeff = 0.5 * (1.0 + math.cos(math.pi * decay_ratio))
             return min_lr + coeff * (max_lr - min_lr)
 
-    optimizer = torch.optim.AdamW(
-        model.parameters(), lr=3e-4, betas=(0.9, 0.95), eps=1e-8
-    )
-    # optimizer = model.configure_optimizers(
-    #     weight_decay=0.1, learning_rate=6e-4, device=device
+    # optimizer = torch.optim.AdamW(
+    #     model.parameters(), lr=3e-4, betas=(0.9, 0.95), eps=1e-8
     # )
+    optimizer = model.configure_optimizers(
+        weight_decay=0.1, learning_rate=6e-4, device=device
+    )
 
     scaler = None
     if device == "cuda" and FLAGS.autocast and FLAGS.autocast_precision == "float16":
