@@ -56,6 +56,11 @@ flags.DEFINE_enum(
     ["bfloat16", "float16"],
     "Set the precision for autocast",
 )
+flags.DEFINE_bool(
+    "compile",
+    False,
+    "Enable torch.compile for training",
+)
 
 
 def get_device():
@@ -97,7 +102,9 @@ def main(argv):
     model = GPT(GPTConfig())
     print(f"Sending model to: {device}")
     model.to(device)
-    model = torch.compile(model)
+    if FLAGS.compile:
+        print("Compiling model")
+        model = torch.compile(model)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
     scaler = None
