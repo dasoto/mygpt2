@@ -99,7 +99,7 @@ def main(argv):
     dataloader = DataLoaderLite("./dataset/input.txt", B, T)
     torch.set_float32_matmul_precision(FLAGS.precision)
 
-    model = GPT(GPTConfig())
+    model = GPT(GPTConfig(vocab_size=50304))
     print(f"Sending model to: {device}")
     model.to(device)
     if FLAGS.compile:
