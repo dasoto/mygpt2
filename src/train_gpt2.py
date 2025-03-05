@@ -142,6 +142,7 @@ def main(argv):
         x, y = x.to(device), y.to(device)
         optimizer.zero_grad()
         # lr = get_lr(step)
+        lr = 0.0
         # for param_group in optimizer.param_groups:
         #     param_group["lr"] = lr
         if FLAGS.autocast:
