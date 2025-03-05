@@ -136,6 +136,8 @@ def main(argv):
         scaler = torch.amp.GradScaler()
 
     start_training = time.time()
+    step_times = []
+    tokens_per_sec = []
     for step in range(FLAGS.steps):
         t0 = time.time()
         x, y = dataloader.next_batch()
@@ -168,11 +170,17 @@ def main(argv):
             torch.mps.synchronize()
         t1 = time.time()
         dt = (t1 - t0) * 1000  # milliseconds
+        toks_per_sec = (B * T / dt) * 1000
+        step_times.append(dt)
+        tokens_per_sec.append(toks_per_sec)
         print(
-            f"step {step:4d} | loss: {loss.item():.6f} | lr: {lr:.4e} |norm: {norm:.4f} | step_time={dt:.2f}ms, toks/sec={(B * T / dt) * 1000:.2f}, device: {device}"
+            f"step {step:4d} | loss: {loss.item():.6f} | lr: {lr:.4e} |norm: {norm:.4f} | step_time={dt:.2f}ms, toks/sec={toks_per_sec:.2f}, device: {device}"
         )
 
     print(f"Training time took: {time.time() - start_training} seconds")
+    print(f"Average step time: {sum(step_times)/len(step_times):.2f}")
+    print(f"Average tokens/sec: {sum(tokens_per_sec)/len(tokens_per_sec):.2f}")
+
     if FLAGS.run_inference:
         print("Starting Inference")
         run_inference(model, device, "Hello, how are you today?", 30, 5)
