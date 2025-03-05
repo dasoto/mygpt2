@@ -141,10 +141,9 @@ def main(argv):
         x, y = dataloader.next_batch()
         x, y = x.to(device), y.to(device)
         optimizer.zero_grad()
-        # lr = get_lr(step)
-        lr = 0.0
-        # for param_group in optimizer.param_groups:
-        #     param_group["lr"] = lr
+        lr = get_lr(step)
+        for param_group in optimizer.param_groups:
+            param_group["lr"] = lr
         if FLAGS.autocast:
             with torch.autocast(
                 device_type=device, dtype=Precision[FLAGS.autocast_precision].value
