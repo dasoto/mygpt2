@@ -111,20 +111,26 @@ def main(argv):
         # get the learning rate using cosine decay
         # 1. linear warmup for some steps
         # 2. then cosine decay to min_steps that is 10% of max_lr
-        max_steps = FLAGS.steps
+        max_steps = 0.9 * FLAGS.steps
         warmup_steps = max_steps // 10
-        min_lr = 3e-5
-        max_lr = 3e-4
+        max_lr = 6e-4
+        min_lr = 0.1 * max_lr
         if step < warmup_steps:
-            return max_lr * step / warmup_steps
+            return max_lr * (step + 1) / warmup_steps
+        if step > max_steps:
+            return min_lr
         else:
             decay_ratio = (step - warmup_steps) / (max_steps - warmup_steps)
             coeff = 0.5 * (1.0 + math.cos(math.pi * decay_ratio))
             return min_lr + coeff * (max_lr - min_lr)
 
-    optimizer = torch.optim.AdamW(
-        model.parameters(), lr=3e-4, betas=(0.9, 0.95), eps=1e-8
+    # optimizer = torch.optim.AdamW(
+    #     model.parameters(), lr=3e-4, betas=(0.9, 0.95), eps=1e-8
+    # )
+    optimizer = model.configure_optimizers(
+        weight_decay=0.1, learning_rate=6e-4, device=device
     )
+
     scaler = None
     if device == "cuda" and FLAGS.autocast and FLAGS.autocast_precision == "float16":
         scaler = torch.amp.GradScaler()

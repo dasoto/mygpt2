@@ -1,3 +1,4 @@
+import inspect
 import math
 import time
 from dataclasses import dataclass
@@ -151,6 +152,34 @@ class GPT(nn.Module):
             loss = F.cross_entropy(logits, targets)
 
         return logits, loss
+
+    def configure_optimizers(
+        self, weight_decay: float, learning_rate: float, device: str
+    ) -> torch.optim:
+        # Start with al lthe parameters that require grad
+        param_dict = {pn: p for pn, p in self.named_parameters()}
+        param_dict = {pn: p for pn, p in param_dict.items() if p.requires_grad}
+        decay_params = [p for n, p in param_dict.items() if p.dim() >= 2]
+        nodecay_params = [p for n, p in param_dict.items() if p.dim() < 2]
+        optim_groups = [
+            {"params": decay_params, "weight_decay": weight_decay},
+            {"params": nodecay_params, "weight_decay": 0.0},
+        ]
+        num_decay_params = sum(p.numel() for p in decay_params)
+        num_nodecay_params = sum(p.numel() for p in nodecay_params)
+        print(
+            f"Num decayed parameter tensors: {len(decay_params)}, with {num_decay_params:,} parameters"
+        )
+        print(
+            f"Num non-decayed parameter tensors: {len(nodecay_params)}, with {num_nodecay_params:,} parameters"
+        )
+        fused_available = "fused" in inspect.signature(torch.optim.AdamW).parameters
+        use_fused = fused_available and "cuda" in device
+        print(f"Using fused AdamW: {use_fused}")
+        optimizer = torch.optim.AdamW(
+            optim_groups, lr=learning_rate, betas=(0.9, 0.95), eps=1e-8
+        )
+        return optimizer
 
     @classmethod
     def from_pretrained(cls, model_type: str):
