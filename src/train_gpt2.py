@@ -99,6 +99,10 @@ def main(argv):
     model.to(device)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
+    scaler = None
+    if device == "cuda" and FLAGS.autocast and FLAGS.autocast_precision == "float16":
+        scaler = torch.amp.GradScaler()
+
     start_training = time.time()
     for i in range(FLAGS.steps):
         t0 = time.time()
@@ -112,8 +116,14 @@ def main(argv):
                 logits, loss = model(x, y)
         else:
             logits, loss = model(x, y)
-        loss.backward()
-        optimizer.step()
+        if scaler:
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+        else:
+            loss.backward()
+            optimizer.step()
+
         if device == "cuda":
             torch.cuda.synchronize()
         elif device == "mps":
