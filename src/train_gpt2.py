@@ -9,6 +9,13 @@ from gpt2 import GPT, GPTConfig, run_inference
 from dataloader import DataLoaderLite
 import tiktoken
 
+from enum import Enum
+
+
+class Precision(Enum):
+    bfloat16 = torch.bfloat16
+    float16 = torch.float16
+
 
 FLAGS = flags.FLAGS
 
@@ -42,6 +49,12 @@ flags.DEFINE_bool(
     "autocast",
     False,
     "Enable autocast for training",
+)
+flags.DEFINE_enum(
+    "autocast_precision",
+    "bfloat16",
+    ["bfloat16", "float16"],
+    "Set the precision for autocast",
 )
 
 
@@ -93,7 +106,9 @@ def main(argv):
         x, y = x.to(device), y.to(device)
         optimizer.zero_grad()
         if FLAGS.autocast:
-            with torch.autocast(device_type=device, dtype=torch.float16):
+            with torch.autocast(
+                device_type=device, dtype=Precision[FLAGS.autocast_precision].value
+            ):
                 logits, loss = model(x, y)
         else:
             logits, loss = model(x, y)
