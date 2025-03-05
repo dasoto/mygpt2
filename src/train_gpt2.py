@@ -62,6 +62,11 @@ flags.DEFINE_bool(
     False,
     "Enable torch.compile for training",
 )
+flags.DEFINE_bool(
+    "fused",
+    True,
+    "To use fused AdamW",
+)
 
 
 def get_device():
@@ -128,7 +133,7 @@ def main(argv):
     #     model.parameters(), lr=3e-4, betas=(0.9, 0.95), eps=1e-8
     # )
     optimizer = model.configure_optimizers(
-        weight_decay=0.1, learning_rate=6e-4, device=device
+        weight_decay=0.1, learning_rate=6e-4, device=device, fused=FLAGS.fused
     )
 
     scaler = None
