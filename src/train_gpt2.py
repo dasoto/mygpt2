@@ -97,6 +97,7 @@ def main(argv):
     model = GPT(GPTConfig())
     print(f"Sending model to: {device}")
     model.to(device)
+    model = torch.compile(model)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
     scaler = None
