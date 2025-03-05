@@ -156,12 +156,12 @@ def main(argv):
         norm = 0.0
         if scaler:
             scaler.scale(loss).backward()
-            # norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             scaler.step(optimizer)
             scaler.update()
         else:
             loss.backward()
-            # norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
 
         if device == "cuda":
