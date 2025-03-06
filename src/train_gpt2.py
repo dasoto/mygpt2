@@ -193,7 +193,7 @@ def main(argv):
             torch.mps.synchronize()
         t1 = time.time()
         dt = (t1 - t0) * 1000  # milliseconds
-        toks_per_sec = (B * T / dt) * 1000
+        toks_per_sec = (B * T * grad_accum_steps / dt) * 1000
         step_times.append(dt)
         tokens_per_sec.append(toks_per_sec)
         print(
