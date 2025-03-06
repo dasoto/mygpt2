@@ -148,9 +148,6 @@ def main(argv):
     if device == "cuda" and FLAGS.autocast and FLAGS.autocast_precision == "float16":
         scaler = torch.amp.GradScaler()
 
-    # TODO: REMOVE
-    scaler = None
-
     start_training = time.time()
     step_times = []
     tokens_per_sec = []
