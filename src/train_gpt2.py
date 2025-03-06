@@ -154,33 +154,38 @@ def main(argv):
     for step in range(FLAGS.steps):
         t0 = time.time()
         optimizer.zero_grad()
+        loss_accum = 0.0
+        for micro_step in range(grad_accum_steps):
+            x, y = dataloader.next_batch()
+            x, y = x.to(device), y.to(device)
 
-        # for micro_step in range(grad_accum_steps):
-        x, y = dataloader.next_batch()
-        x, y = x.to(device), y.to(device)
-
-        if FLAGS.autocast:
-            with torch.autocast(
-                device_type=device, dtype=Precision[FLAGS.autocast_precision].value
-            ):
+            if FLAGS.autocast:
+                with torch.autocast(
+                    device_type=device, dtype=Precision[FLAGS.autocast_precision].value
+                ):
+                    logits, loss = model(x, y)
+            else:
                 logits, loss = model(x, y)
-        else:
-            logits, loss = model(x, y)
-        norm = 0.0
 
-        if scaler:
-            scaler.scale(loss).backward()
-            norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            scaler.step(optimizer)
-            scaler.update()
-        else:
-            loss.backward()
-            norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            optimizer.step()
+            loss = loss / grad_accum_steps
+            loss_accum += loss.detach()
+
+            if scaler:
+                scaler.scale(loss).backward()
+            else:
+                loss.backward()
+
+        norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
 
         lr = get_lr(step)
         for param_group in optimizer.param_groups:
             param_group["lr"] = lr
+
+        if scaler:
+            scaler.step(optimizer)
+            scaler.update()
+        else:
+            optimizer.step()
 
         if device == "cuda":
             torch.cuda.synchronize()
@@ -192,7 +197,7 @@ def main(argv):
         step_times.append(dt)
         tokens_per_sec.append(toks_per_sec)
         print(
-            f"step {step:4d} | loss: {loss.item():.6f} | lr: {lr:.4e} |norm: {norm:.4f} | step_time={dt:.2f}ms, toks/sec={toks_per_sec:.2f}, device: {device}"
+            f"step {step:4d} | loss: {loss_accum.item():.6f} | lr: {lr:.4e} |norm: {norm:.4f} | step_time={dt:.2f}ms, toks/sec={toks_per_sec:.2f}, device: {device}"
         )
 
     print(f"Training time took: {time.time() - start_training} seconds")
