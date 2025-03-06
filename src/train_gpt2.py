@@ -94,7 +94,15 @@ def main(argv):
     # print(f"It took: {time.time() - start_time}")
 
     # Data loading
-    B, T = FLAGS.batch_size, FLAGS.seq_length
+    B, T = FLAGS.batch_size, FLAGS.seq_length  # Micro batch size, sequence_length
+    total_batch_size = 524288  # 2**10 ~0.5M in number of tokens
+
+    assert (
+        total_batch_size % (B * T) == 0
+    ), "Make sure total_batch_size is divisible by B * T"
+    grad_accum_steps = total_batch_size // (B * T)
+    print(f"Total desired batch size: {total_batch_size}")
+    print(f"Calculated gradient accumuklation steps: {grad_accum_steps}")
 
     torch.manual_seed(1337)
     if device == "cuda":
@@ -139,18 +147,21 @@ def main(argv):
     scaler = None
     if device == "cuda" and FLAGS.autocast and FLAGS.autocast_precision == "float16":
         scaler = torch.amp.GradScaler()
+    
+    # TODO: REMOVE
+    scaler = None
 
     start_training = time.time()
     step_times = []
     tokens_per_sec = []
     for step in range(FLAGS.steps):
         t0 = time.time()
+        optimizer.zero_grad()
+        
+        for micro_step in range(grad_accum_steps):
         x, y = dataloader.next_batch()
         x, y = x.to(device), y.to(device)
-        optimizer.zero_grad()
-        lr = get_lr(step)
-        for param_group in optimizer.param_groups:
-            param_group["lr"] = lr
+
         if FLAGS.autocast:
             with torch.autocast(
                 device_type=device, dtype=Precision[FLAGS.autocast_precision].value
@@ -159,6 +170,9 @@ def main(argv):
         else:
             logits, loss = model(x, y)
         norm = 0.0
+        lr = get_lr(step)
+        for param_group in optimizer.param_groups:
+            param_group["lr"] = lr
         if scaler:
             scaler.scale(loss).backward()
             norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
