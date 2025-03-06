@@ -102,7 +102,7 @@ def main(argv):
     ), "Make sure total_batch_size is divisible by B * T"
     grad_accum_steps = total_batch_size // (B * T)
     print(f"Total desired batch size: {total_batch_size}")
-    print(f"Calculated gradient accumuklation steps: {grad_accum_steps}")
+    print(f"Calculated gradient accumulation steps: {grad_accum_steps}")
 
     torch.manual_seed(1337)
     if device == "cuda":
