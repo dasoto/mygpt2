@@ -167,9 +167,7 @@ def main(argv):
         else:
             logits, loss = model(x, y)
         norm = 0.0
-        lr = get_lr(step)
-        for param_group in optimizer.param_groups:
-            param_group["lr"] = lr
+
         if scaler:
             scaler.scale(loss).backward()
             norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
@@ -179,6 +177,10 @@ def main(argv):
             loss.backward()
             norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
+
+        lr = get_lr(step)
+        for param_group in optimizer.param_groups:
+            param_group["lr"] = lr
 
         if device == "cuda":
             torch.cuda.synchronize()
