@@ -147,7 +147,7 @@ def main(argv):
     scaler = None
     if device == "cuda" and FLAGS.autocast and FLAGS.autocast_precision == "float16":
         scaler = torch.amp.GradScaler()
-    
+
     # TODO: REMOVE
     scaler = None
 
@@ -157,8 +157,8 @@ def main(argv):
     for step in range(FLAGS.steps):
         t0 = time.time()
         optimizer.zero_grad()
-        
-        for micro_step in range(grad_accum_steps):
+
+        # for micro_step in range(grad_accum_steps):
         x, y = dataloader.next_batch()
         x, y = x.to(device), y.to(device)
 
